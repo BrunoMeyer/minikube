@@ -467,16 +467,23 @@ func configureRuntimes(runner cruntime.CommandRunner, cc config.ClusterConfig, k
 	if err = cr.Enable(disableOthers, cgroupDriver(cc), inUserNamespace); err != nil {
 		exit.Error(reason.RuntimeEnable, "Failed to enable container runtime", err)
 	}
+	klog.Infof("Successfully enabled %s container runtime", cr.Name())
+	fmt.Printf("Successfully enabled %s container runtime\n", cr.Name())
+
 
 	// Wait for the CRI to be "live", before returning it
-	if err = waitForCRISocket(runner, cr.SocketPath(), 60, 1); err != nil {
-		exit.Error(reason.RuntimeEnable, "Failed to start container runtime", err)
+	if err = waitForCRISocket(runner, cr.SocketPath(), cc.CriWaitLiveTimeout, cc.CriWaitLiveInterval); err != nil {
+		exit.Error(reason.RuntimeEnable, "Failed to start container runtime: "+cr.SocketPath(), err)
 	}
 
+	klog.Infof("Successfully started %s container runtime", cr.Name())
+
 	// Wait for the CRI to actually work, before returning
-	if err = waitForCRIVersion(runner, cr.SocketPath(), 60, 10); err != nil {
-		exit.Error(reason.RuntimeEnable, "Failed to start container runtime", err)
+	if err = waitForCRIVersion(runner, cr.SocketPath(), cc.CriWaitWorkTimeout, cc.CriWaitWorkInterval); err != nil {
+		exit.Error(reason.RuntimeEnable, "Failed to start container runtime: "+cr.SocketPath(), err)
 	}
+
+	klog.Infof("Successfully started %s container runtime", cr.Name())
 
 	return cr
 }
@@ -533,7 +540,7 @@ func pathExists(runner cruntime.CommandRunner, path string) (bool, error) {
 	return false, err
 }
 
-func waitForCRISocket(runner cruntime.CommandRunner, socket string, wait int, interval int) error {
+func waitForCRISocket(runner cruntime.CommandRunner, socket string, wait time.Duration, interval time.Duration) error {
 
 	if socket == "" || socket == "/var/run/dockershim.sock" {
 		return nil
@@ -551,10 +558,10 @@ func waitForCRISocket(runner cruntime.CommandRunner, socket string, wait int, in
 		}
 		return nil
 	}
-	return retry.Expo(chkPath, time.Duration(interval)*time.Second, time.Duration(wait)*time.Second)
+	return retry.Expo(chkPath, interval, wait)
 }
 
-func waitForCRIVersion(runner cruntime.CommandRunner, socket string, wait int, interval int) error {
+func waitForCRIVersion(runner cruntime.CommandRunner, socket string, wait time.Duration, interval time.Duration) error {
 
 	if socket == "" || socket == "/var/run/dockershim.sock" {
 		return nil
@@ -579,7 +586,7 @@ func waitForCRIVersion(runner cruntime.CommandRunner, socket string, wait int, i
 		klog.Info(rr.Stdout.String())
 		return nil
 	}
-	return retry.Expo(chkInfo, time.Duration(interval)*time.Second, time.Duration(wait)*time.Second)
+	return retry.Expo(chkInfo, interval, wait)
 }
 
 // setupKubeadm adds any requested files into the VM before Kubernetes is started.

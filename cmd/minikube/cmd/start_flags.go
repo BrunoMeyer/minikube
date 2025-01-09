@@ -144,6 +144,10 @@ const (
 	staticIP                = "static-ip"
 	gpus                    = "gpus"
 	autoPauseInterval       = "auto-pause-interval"
+	criWaitLiveInterval     = "cri-wait-live-interval"
+	criWaitWorkInterval     = "cri-wait-work-interval"
+	criWaitLiveTimeout      = "cri-wait-live-timeout"
+	criWaitWorkTimeout      = "cri-wait-work-timeout"
 )
 
 var (
@@ -208,6 +212,10 @@ func initMinikubeFlags() {
 	startCmd.Flags().String(staticIP, "", "Set a static IP for the minikube cluster, the IP must be: private, IPv4, and the last octet must be between 2 and 254, for example 192.168.200.200 (Docker and Podman drivers only)")
 	startCmd.Flags().StringP(gpus, "g", "", "Allow pods to use your GPUs. Options include: [all,nvidia,amd] (Docker driver with Docker container-runtime only)")
 	startCmd.Flags().Duration(autoPauseInterval, time.Minute*1, "Duration of inactivity before the minikube VM is paused (default 1m0s)")
+	startCmd.Flags().Duration(criWaitLiveInterval, time.Second*1, "Interval between live checks for the status of the container runtime")
+	startCmd.Flags().Duration(criWaitLiveTimeout, time.Second*60, "Timeout for live checks for the status of the container runtime")
+	startCmd.Flags().Duration(criWaitWorkInterval, time.Second*10, "Interval between work checks for the status of the container runtime")
+	startCmd.Flags().Duration(criWaitWorkTimeout, time.Second*60, "Timeout for work checks for the status of the container runtime")
 }
 
 // initKubernetesFlags inits the commandline flags for Kubernetes related options
@@ -607,6 +615,10 @@ func generateNewConfigFromFlags(cmd *cobra.Command, k8sVersion string, rtime str
 		MultiNodeRequested: viper.GetInt(nodes) > 1 || viper.GetBool(ha),
 		GPUs:               viper.GetString(gpus),
 		AutoPauseInterval:  viper.GetDuration(autoPauseInterval),
+		CriWaitLiveInterval:  viper.GetDuration(criWaitLiveInterval),
+		CriWaitWorkInterval:  viper.GetDuration(criWaitWorkInterval),
+		CriWaitLiveTimeout:  viper.GetDuration(criWaitLiveTimeout),
+		CriWaitWorkTimeout:  viper.GetDuration(criWaitWorkTimeout),
 	}
 	cc.VerifyComponents = interpretWaitFlag(*cmd)
 	if viper.GetBool(createMount) && driver.IsKIC(drvName) {
@@ -837,6 +849,10 @@ func updateExistingConfigFromFlags(cmd *cobra.Command, existing *config.ClusterC
 	updateStringFromFlag(cmd, &cc.SocketVMnetClientPath, socketVMnetClientPath)
 	updateStringFromFlag(cmd, &cc.SocketVMnetPath, socketVMnetPath)
 	updateDurationFromFlag(cmd, &cc.AutoPauseInterval, autoPauseInterval)
+	updateDurationFromFlag(cmd, &cc.CriWaitLiveInterval, criWaitLiveInterval)
+	updateDurationFromFlag(cmd, &cc.CriWaitWorkInterval, criWaitWorkInterval)
+	updateDurationFromFlag(cmd, &cc.CriWaitLiveTimeout, criWaitLiveTimeout)
+	updateDurationFromFlag(cmd, &cc.CriWaitWorkTimeout, criWaitWorkTimeout)
 
 	if cmd.Flags().Changed(kubernetesVersion) {
 		kubeVer, err := getKubernetesVersion(existing)

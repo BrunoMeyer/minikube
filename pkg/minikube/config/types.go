@@ -109,6 +109,10 @@ type ClusterConfig struct {
 	SSHAgentPID             int
 	GPUs                    string
 	AutoPauseInterval       time.Duration // Specifies interval of time to wait before checking if cluster should be paused
+	CriWaitLiveInterval     time.Duration // Specifies interval of time to wait before checking if cluster should be paused
+	CriWaitWorkInterval     time.Duration // Specifies interval of time to wait before checking if cluster should be paused
+	CriWaitLiveTimeout     time.Duration // Specifies interval of time to wait before checking if cluster should be paused
+	CriWaitWorkTimeout     time.Duration // Specifies interval of time to wait before checking if cluster should be paused
 }
 
 // KubernetesConfig contains the parameters used to configure the VM Kubernetes.
