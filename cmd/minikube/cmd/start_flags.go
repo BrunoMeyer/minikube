@@ -212,10 +212,10 @@ func initMinikubeFlags() {
 	startCmd.Flags().String(staticIP, "", "Set a static IP for the minikube cluster, the IP must be: private, IPv4, and the last octet must be between 2 and 254, for example 192.168.200.200 (Docker and Podman drivers only)")
 	startCmd.Flags().StringP(gpus, "g", "", "Allow pods to use your GPUs. Options include: [all,nvidia,amd] (Docker driver with Docker container-runtime only)")
 	startCmd.Flags().Duration(autoPauseInterval, time.Minute*1, "Duration of inactivity before the minikube VM is paused (default 1m0s)")
-	startCmd.Flags().Duration(criWaitLiveInterval, time.Second*1, "Interval between live checks for the status of the container runtime")
+	startCmd.Flags().Duration(criWaitLiveInterval, time.Second*1, "Retry interval between live checks for the status of the container runtime")
 	startCmd.Flags().Duration(criWaitLiveTimeout, time.Second*60, "Timeout for live checks for the status of the container runtime")
-	startCmd.Flags().Duration(criWaitWorkInterval, time.Second*10, "Interval between work checks for the status of the container runtime")
-	startCmd.Flags().Duration(criWaitWorkTimeout, time.Second*60, "Timeout for work checks for the status of the container runtime")
+	startCmd.Flags().Duration(criWaitWorkInterval, time.Second*10, "Retry interval between any command for the status of the container runtime")
+	startCmd.Flags().Duration(criWaitWorkTimeout, time.Second*60, "Timeout for any command for the status of the container runtime (only applies when using docker)")
 }
 
 // initKubernetesFlags inits the commandline flags for Kubernetes related options

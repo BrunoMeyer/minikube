@@ -23,7 +23,6 @@ import (
 	"os/exec"
 	"runtime"
 	"strings"
-	"time"
 
 	"github.com/blang/semver/v4"
 	"github.com/docker/machine/libmachine/drivers"
@@ -43,6 +42,10 @@ const (
 	docURL                   = "https://minikube.sigs.k8s.io/docs/drivers/docker/"
 	minDockerVersion         = "18.09.0"
 	recommendedDockerVersion = "20.10.0"
+)
+
+var (
+	CriWaitWorkTimeout = viper.GetDuration("criWaitWorkTimeout")
 )
 
 func init() {
@@ -163,7 +166,7 @@ var dockerVersionOrState = func() (string, registry.State) {
 		}
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 6*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), CriWaitWorkTimeout)
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, oci.Docker, "version", "--format", "{{.Server.Os}}-{{.Server.Version}}:{{.Server.Platform.Name}}")
