@@ -44,10 +44,6 @@ const (
 	recommendedDockerVersion = "20.10.0"
 )
 
-var (
-	CriWaitWorkTimeout = viper.GetDuration("criWaitWorkTimeout")
-)
-
 func init() {
 	if err := registry.Register(registry.DriverDef{
 		Name:     driver.Docker,
@@ -165,6 +161,10 @@ var dockerVersionOrState = func() (string, registry.State) {
 			Doc:       "https://minikube.sigs.k8s.io/docs/start/",
 		}
 	}
+
+	CriWaitWorkTimeout := viper.GetDuration("cri-wait-work-timeout")
+
+	klog.Info("Checking docker version. Using timeout: %s", CriWaitWorkTimeout)
 
 	ctx, cancel := context.WithTimeout(context.Background(), CriWaitWorkTimeout)
 	defer cancel()
