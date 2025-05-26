@@ -23,7 +23,6 @@ import (
 	"os/exec"
 	"runtime"
 	"strings"
-	"time"
 
 	"github.com/blang/semver/v4"
 	"github.com/docker/machine/libmachine/drivers"
@@ -163,7 +162,11 @@ var dockerVersionOrState = func() (string, registry.State) {
 		}
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 6*time.Second)
+	CriWaitWorkTimeout := viper.GetDuration("cri-wait-work-timeout")
+
+	klog.Info("Checking docker version. Using timeout: %s", CriWaitWorkTimeout)
+
+	ctx, cancel := context.WithTimeout(context.Background(), CriWaitWorkTimeout)
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, oci.Docker, "version", "--format", "{{.Server.Os}}-{{.Server.Version}}:{{.Server.Platform.Name}}")

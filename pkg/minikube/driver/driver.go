@@ -24,6 +24,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"github.com/spf13/viper"
 
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -358,7 +359,10 @@ func Suggest(options []registry.DriverState) (registry.DriverState, []registry.D
 func Status(name string) registry.DriverState {
 	d := registry.Driver(name)
 	stateChannel := make(chan registry.State)
-	timeoutChannel := time.After(20 * time.Second)
+	CriWaitWorkTimeout := viper.GetDuration("cri-wait-work-timeout")
+	// timeoutChannel := time.After(20 * time.Second)
+	timeoutChannel := time.After(CriWaitWorkTimeout/3)
+	
 	go func() {
 		stateChannel <- registry.Status(name)
 	}()

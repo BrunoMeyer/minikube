@@ -29,6 +29,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/spf13/viper"
+
 	"k8s.io/klog/v2"
 
 	"k8s.io/minikube/pkg/minikube/constants"
@@ -142,12 +144,22 @@ func runCmd(cmd *exec.Cmd, warnSlow ...bool) (*RunResult, error) {
 		warn = warnSlow[0]
 	}
 
-	killTime := 19 * time.Second // this will be applied only if warnSlow is true
-	warnTime := 2 * time.Second
+	CriWaitWorkTimeout := viper.GetDuration("cri-wait-work-timeout")
+
+	killTime := CriWaitWorkTimeout/3 // this will be applied only if warnSlow is true
+	warnTime := CriWaitWorkTimeout/30
 
 	if cmd.Args[1] == "volume" || cmd.Args[1] == "ps" { // volume and ps requires more time than inspect
-		killTime = 30 * time.Second
-		warnTime = 3 * time.Second
+		killTime = CriWaitWorkTimeout/2
+		warnTime = CriWaitWorkTimeout/20
+	}
+
+	// Check if killTime and warnTime are valid
+	if killTime < 1*time.Second {
+		killTime = 1 * time.Second
+	}
+	if warnTime < 1*time.Second {
+		warnTime = 1 * time.Second
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), killTime)
